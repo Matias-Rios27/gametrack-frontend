@@ -1,15 +1,40 @@
 @import "tailwindcss";
 
+html {
+  font-size: 112.5%; /* Escala de 16px a 18px como base */
+}
+
 :root {
+  --background: #fafafa;
+  --foreground: #09090b;
+  --accent: #00f0ff;
+  --accent-dark: #0096cc;
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --text-muted: #64748b; /* slate-500 */
+  --text-soft: #94a3b8; /* slate-400 */
+}
+
+.dark {
   --background: #09090b;
   --foreground: #fafafa;
+  --accent: #00f0ff;
+  --accent-dark: #0096cc;
+  --card-bg: rgba(15, 23, 42, 0.4);
+  --border-color: rgba(255, 255, 255, 0.05);
+  --text-muted: #94a3b8; /* slate-400 */
+  --text-soft: #64748b; /* slate-500 */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-electric-blue: #00f0ff;
-  --color-electric-blue-dark: #0096cc;
+  --color-muted: var(--text-muted);
+  --color-soft: var(--text-soft);
+  --color-border-color: var(--border-color);
+  --color-card-bg: var(--card-bg);
+  --color-electric-blue: var(--color-electric-blue, #00f0ff);
+  --color-electric-blue-dark: var(--color-electric-blue-dark, #0096cc);
   --color-neon-green: #39ff14;
   --color-neon-green-dark: #2ba80f;
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -17,22 +42,23 @@
 }
 
 body {
-  background-color: #050510;
+  background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   background-image: 
-    radial-gradient(circle at 15% -20%, rgba(0, 240, 255, 0.25), transparent 50%),
+    radial-gradient(circle at 15% -20%, var(--color-electric-blue, rgba(0, 240, 255, 0.25)), transparent 50%),
     radial-gradient(circle at 85% 120%, rgba(57, 255, 20, 0.2), transparent 50%);
   background-attachment: fixed;
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Glass panel utility */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--card-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
 }
 
 /* Custom scrollbar */
@@ -44,9 +70,22 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
+  background: var(--color-electric-blue, #334155);
+  border-radius: 10px;
+  border: 2px solid var(--background);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--color-electric-blue-dark, #475569);
+}
+
+.text-primary {
+  color: var(--foreground);
+}
+
+.text-secondary {
+  color: rgba(var(--foreground-rgb, 255, 255, 255), 0.6);
+}
+
+.accent-text {
+  color: var(--color-electric-blue);
 }

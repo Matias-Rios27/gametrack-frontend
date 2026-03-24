@@ -12,7 +12,7 @@ export default function AddToWishlistButton({ gameId }: { gameId: string }) {
       className={`flex items-center gap-2 px-6 py-3 font-bold rounded-xl transition-all ${
         isWishlisted 
           ? 'bg-neon-green/10 text-neon-green border border-neon-green shadow-[0_0_15px_rgba(57,255,20,0.3)]' 
-          : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-transparent'
+          : 'bg-card-bg text-foreground hover:bg-black/5 dark:hover:bg-white/5 border border-border-color'
       }`}
     >
       <Heart className={`w-5 h-5 transition-transform ${isWishlisted ? 'fill-neon-green scale-110' : 'scale-100'}`} />
