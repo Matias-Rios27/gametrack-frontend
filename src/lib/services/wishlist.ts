@@ -22,10 +22,15 @@ export interface WishlistItem {
   id_juego: string;
   prioridad: Prioridad;
   juego?: Juego; // populated locally
+  createdAt?: string;
 }
 
 export const addWishlistItem = async (item: Omit<WishlistItem, 'id'>) => {
-  const docRef = await addDoc(collection(db, WISHLIST_COLLECTION), item);
+  const dataToSave = {
+    ...item,
+    createdAt: new Date().toISOString()
+  };
+  const docRef = await addDoc(collection(db, WISHLIST_COLLECTION), dataToSave);
   return docRef.id;
 };
 

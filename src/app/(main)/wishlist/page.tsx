@@ -10,20 +10,43 @@ import { useAuth } from "@/context/AuthContext"
 import { getUserWishlist, WishlistItem } from "@/lib/services/wishlist"
 
 export default function WishlistPage() {
-  const { user, loading } = useAuth();
+  const { user, userData, loading } = useAuth();
   const [items, setItems] = useState<WishlistItem[]>([]);
+  const [steamWishlist, setSteamWishlist] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      getUserWishlist(user.uid).then((data) => {
-        setItems(data);
-        setDataLoading(false);
-      });
+      const fetchData = async () => {
+        try {
+          const localWishlist = await getUserWishlist(user.uid);
+          setItems(localWishlist);
+
+          if (userData?.steamId) {
+            const steamRes = await fetch(`/api/steam/wishlist?steamid=${userData.steamId}`);
+            if (steamRes.ok) {
+                const steamData = await steamRes.json();
+                // steamData is an object with appids as keys
+                const steamItems = Object.keys(steamData).map(appid => ({
+                    id: `steam-wl-${appid}`,
+                    appid,
+                    ...steamData[appid]
+                }));
+                setSteamWishlist(steamItems);
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching wishlist data", err);
+        } finally {
+          setDataLoading(false);
+        }
+      };
+      
+      fetchData();
     } else if (!loading) {
       setDataLoading(false);
     }
-  }, [user, loading]);
+  }, [user, loading, userData]);
 
   if (loading || dataLoading) {
     return <div className="p-8 text-center text-slate-400">Cargando wishlist...</div>;
@@ -50,7 +73,6 @@ export default function WishlistPage() {
           </Button>
         </Link>
       </div>
-
       <div className="flex flex-col gap-4">
         {items.length === 0 ? (
           <div className="text-center py-16 bg-card-bg rounded-xl border border-dashed border-border-color w-full mt-4">
@@ -92,6 +114,45 @@ export default function WishlistPage() {
           ))
         )}
       </div>
+
+      {steamWishlist.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3 mb-6">
+            <img src="/steam-icon.svg" alt="Steam" className="w-6 h-6" onError={(e) => (e.target as any).style.display='none'} />
+            Steam Wishlist
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {steamWishlist.map((item) => (
+              <Card key={item.id} className="bg-card-bg border-border-color hover:border-electric-blue overflow-hidden group">
+                <div className="aspect-video w-full relative bg-gray-800">
+                    <img src={item.capsule} alt={item.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    <div className="absolute top-2 right-2">
+                        <Badge variant="outline" className="bg-black/60 backdrop-blur-md border-white/20 text-white">
+                           Steam
+                        </Badge>
+                    </div>
+                </div>
+                <CardContent className="p-4">
+                  <h3 className="font-bold text-foreground truncate" title={item.name}>{item.name}</h3>
+                  <div className="flex items-center justify-between mt-3">
+                    <div className="text-xs text-muted">
+                        {item.release_string || "Próximamente"}
+                    </div>
+                    {item.subs && item.subs[0] && (
+                        <div className="text-sm font-semibold text-emerald-400">
+                            {item.subs[0].price ? `${(item.subs[0].price / 100).toFixed(2)} USD` : "Pronto"}
+                        </div>
+                    )}
+                  </div>
+                  <Button variant="outline" className="w-full mt-4 text-xs border-electric-blue/30 text-electric-blue hover:bg-electric-blue/10 gap-2">
+                    Ver en Steam
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

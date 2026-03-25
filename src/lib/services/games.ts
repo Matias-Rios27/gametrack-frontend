@@ -21,6 +21,7 @@ export interface Juego {
   portada_url?: string;
   plataforma?: string;
   genero?: string;
+  steam_appid?: number | null;
 }
 
 export type Estado = 'jugando' | 'pausado' | 'completado' | 'abandonado';
@@ -35,7 +36,8 @@ export interface UsuarioJuego {
   juego?: Juego; // populated locally
   fecha_inicio?: string;
   hora_inicio?: string;
-  motivo_estado?: string;
+  motivo_estado?: string | null;
+  steam_appid?: number | null;
   updatedAt?: string;
 }
 

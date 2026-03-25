@@ -8,6 +8,7 @@ import { getUserWishlist } from '@/lib/services/wishlist';
 import { getAllUserDiaryEntries } from '@/lib/services/diary';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
+import { SteamLinkSection } from '@/components/profile/SteamLinkSection';
 
 export default function ProfilePage() {
   const { user, userData, logout, loading } = useAuth();
@@ -15,6 +16,7 @@ export default function ProfilePage() {
   const [gamesCount, setGamesCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [diaryCount, setDiaryCount] = useState(0);
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -27,6 +29,51 @@ export default function ProfilePage() {
         setGamesCount(games.length);
         setWishlistCount(wishlist.length);
         setDiaryCount(diary.length);
+
+        // Aggregate activities
+        const activities: any[] = [];
+
+        // 1. New Games
+        games.forEach(g => {
+            activities.push({
+                id: `game-${g.id}`,
+                type: 'game',
+                title: 'Nuevo juego añadido',
+                name: g.juego?.titulo || 'Juego Desconocido',
+                date: g.updatedAt || new Date().toISOString(),
+                icon: <Gamepad2 className="w-4 h-4 text-electric-blue" />
+            });
+        });
+
+        // 2. Wishlist
+        wishlist.forEach(w => {
+            activities.push({
+                id: `wish-${w.id}`,
+                type: 'wishlist',
+                title: 'Añadido a la Wishlist',
+                name: w.juego?.titulo || 'Juego Desconocido',
+                date: (w as any).createdAt || new Date().toISOString(),
+                icon: <Heart className="w-4 h-4 text-rose-500" />
+            });
+        });
+
+        // 3. Diary
+        diary.forEach(d => {
+            activities.push({
+                id: `diary-${d.id}`,
+                type: 'diary',
+                title: 'Nueva entrada en el diario',
+                name: d.juegoTitulo || 'Juego',
+                content: d.contenido.substring(0, 100) + (d.contenido.length > 100 ? '...' : ''),
+                date: d.fecha,
+                icon: <BookOpen className="w-4 h-4 text-emerald-500" />
+            });
+        });
+
+        // Sort by date desc
+        activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setRecentActivities(activities.slice(0, 10)); // Show last 10
+
         setDataLoading(false);
       });
     } else if (!loading) {
@@ -109,10 +156,39 @@ export default function ProfilePage() {
             <span className="w-2 h-8 bg-electric-blue rounded-full shadow-[0_0_8px_rgba(var(--color-electric-blue),0.6)]"></span>
             Actividad Reciente
           </h2>
-          <div className="space-y-4 text-foreground">
-            <p className="text-center text-soft py-8">La funcionalidad de actividad reciente estará disponible pronto.</p>
+          <div className="space-y-6">
+            {recentActivities.length === 0 ? (
+                <p className="text-center text-soft py-8">Aún no hay actividad registrada.</p>
+            ) : (
+                recentActivities.map((activity) => (
+                    <div key={activity.id} className="flex gap-4 items-start group">
+                        <div className="mt-1 p-2 rounded-lg bg-black/5 dark:bg-white/5 border border-border-color group-hover:border-electric-blue/50 transition-colors">
+                            {activity.icon}
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                                <p className="text-sm font-bold text-foreground">{activity.title}</p>
+                                <span className="text-[10px] text-muted whitespace-nowrap">
+                                    {new Date(activity.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+                                </span>
+                            </div>
+                            <p className="text-sm text-foreground/80 mt-1">
+                                {activity.name}
+                            </p>
+                            {activity.type === 'diary' && (
+                                <p className="text-xs text-muted italic mt-2 border-l-2 border-emerald-500/30 pl-3 py-1">
+                                    "{activity.content}"
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                ))
+            )}
           </div>
         </div>
+
+        {/* Steam Link Section */}
+        <SteamLinkSection />
       </div>
     </div>
   );

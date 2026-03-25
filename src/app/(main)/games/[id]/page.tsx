@@ -1,7 +1,7 @@
 "use client"
 
 import { use, useState, useEffect } from "react"
-import { ArrowLeft, Edit, Clock, Trophy, Target, BookText, Edit2, Trash2 } from "lucide-react"
+import { ArrowLeft, Edit, Clock, Trophy, Target, BookText, Edit2, Trash2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
@@ -15,7 +15,7 @@ import EditDiaryModal from "@/components/diary/EditDiaryModal"
 
 export default function GameDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = use(params);
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -24,6 +24,7 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
   const [game, setGame] = useState<UsuarioJuego | null>(null);
   const [diaryEntries, setDiaryEntries] = useState<DiarioEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (user && unwrappedParams.id) {
@@ -46,6 +47,32 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
       setLoading(false);
     }
   }, [user, unwrappedParams.id]);
+
+  const handleSyncSteam = async () => {
+    if (!game?.steam_appid || !user) return;
+    setSyncing(true);
+    try {
+      // Find steamId from userData if not in game
+      const res = await fetch(`/api/steam/games?steamid=${userData?.steamId}`);
+      const data = await res.json();
+      const steamGame = data.response?.games?.find((g: any) => g.appid === game.steam_appid);
+      
+      if (steamGame) {
+        const newHours = Math.floor(steamGame.playtime_forever / 60);
+        const { updateDoc, doc } = await import("firebase/firestore");
+        const { db } = await import("@/lib/firebase");
+        await updateDoc(doc(db, "usuario_juego", game.id!), {
+            horas_jugadas: newHours,
+            updatedAt: new Date().toISOString()
+        });
+        setGame({ ...game, horas_jugadas: newHours });
+      }
+    } catch (error) {
+      console.error("Error syncing with steam:", error);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handleDeleteDiary = async (entryId: string) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar esta entrada?")) {
@@ -127,9 +154,23 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
             <CardContent className="p-6 space-y-4">
               <div>
                 <p className="text-xs text-soft font-medium uppercase tracking-wider mb-1">Horas Jugadas</p>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-violet-400" />
-                  <span className="text-2xl font-bold">{game.horas_jugadas || 0}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-violet-400" />
+                    <span className="text-2xl font-bold">{game.horas_jugadas || 0}</span>
+                  </div>
+                  {game.steam_appid && userData?.steamId && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-electric-blue hover:bg-electric-blue/10"
+                      onClick={handleSyncSteam}
+                      disabled={syncing}
+                      title="Sincronizar horas con Steam"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+                    </Button>
+                  )}
                 </div>
               </div>
               

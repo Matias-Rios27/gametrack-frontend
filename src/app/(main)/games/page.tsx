@@ -94,6 +94,11 @@ export default function GamesPage() {
                     >
                       {game.estado}
                     </Badge>
+                    {game.steam_appid && (
+                      <Badge variant="outline" className="bg-[#171a21]/80 backdrop-blur-md border-[#66c0f4]/30 text-[#66c0f4] text-[10px] h-5">
+                        Steam
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <CardContent className="p-5">
