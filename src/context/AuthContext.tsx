@@ -6,7 +6,8 @@ import {
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signOut 
+  signOut,
+  signInWithCustomToken 
 } from "firebase/auth";
 import { auth, db } from "../lib/firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
@@ -17,6 +18,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
+  loginWithSteam: (steamId: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -69,8 +71,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signOut(auth);
   };
 
+  const loginWithSteam = async (steamId: string) => {
+    const res = await fetch("/api/auth/steam/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ steamId }),
+    });
+    
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    
+    await signInWithCustomToken(auth, data.token);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, userData, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, userData, loading, login, register, loginWithSteam, logout }}>
       {children}
     </AuthContext.Provider>
   );

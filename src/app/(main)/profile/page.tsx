@@ -9,9 +9,11 @@ import { getAllUserDiaryEntries } from '@/lib/services/diary';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { SteamLinkSection } from '@/components/profile/SteamLinkSection';
+import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
   const { user, userData, logout, loading } = useAuth();
+  const router = useRouter();
   
   const [gamesCount, setGamesCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
@@ -116,7 +118,13 @@ export default function ProfilePage() {
               <Settings className="w-5 h-5" />
               Editar Perfil
             </Link>
-            <button onClick={logout} className="flex items-center justify-center gap-2 px-6 py-3 bg-card-bg text-muted font-medium rounded-xl hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-colors border border-border-color">
+            <button 
+              onClick={async () => {
+                await logout();
+                router.push("/login");
+              }} 
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-card-bg text-muted font-medium rounded-xl hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-colors border border-border-color"
+            >
               <LogOut className="w-5 h-5" />
               Cerrar Sesión
             </button>

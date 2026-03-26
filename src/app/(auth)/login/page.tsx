@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
@@ -13,8 +13,30 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login } = useAuth();
+  const { login, register, loginWithSteam } = useAuth(); // We might need register too
   const router = useRouter();
+  const [loadingSteam, setLoadingSteam] = useState(false);
+
+  // Handle Steam Login if steamId is in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const steamId = urlParams.get("steamId");
+    if (steamId) {
+      handleSteamLogin(steamId);
+    }
+  }, []);
+
+  const handleSteamLogin = async (steamId: string) => {
+    setLoadingSteam(true);
+    try {
+      await loginWithSteam(steamId);
+      router.push("/");
+    } catch (err: any) {
+      setError("Error al iniciar sesión con Steam: " + err.message + ". ¿Has configurado FIREBASE_SERVICE_ACCOUNT_KEY?");
+    } finally {
+      setLoadingSteam(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +106,25 @@ export default function LoginPage() {
             Entrar al juego
           </Button>
         </form>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border-color"></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card-bg px-2 text-muted">O continuar con</span>
+          </div>
+        </div>
+
+        <Button 
+          variant="outline" 
+          onClick={() => window.location.href = "/api/auth/steam"}
+          disabled={loadingSteam}
+          className="w-full border-border-color hover:border-electric-blue hover:bg-electric-blue/5 transition-all flex items-center justify-center gap-3 py-6"
+        >
+          <img src="/steam-icon.svg" alt="Steam" className="w-5 h-5" onError={(e) => (e.target as any).style.display='none'} />
+          {loadingSteam ? "Verificando..." : "Iniciar sesión con Steam"}
+        </Button>
 
         <p className="text-center text-sm text-muted">
           ¿Nuevo jugador?{" "}

@@ -4,43 +4,40 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const params = Object.fromEntries(searchParams.entries());
 
-  // 1. Verify the assertion with Steam
-  const verificationParams = new URLSearchParams(params);
-  verificationParams.set("openid.mode", "check_authentication");
-
-  console.log("Steam Callback params received:", params);
+  // 1. Verify the assertion by making a request back to Steam
+  const verificationParams = {
+    ...params,
+    "openid.mode": "check_authentication",
+  };
 
   try {
-    const response = await fetch("https://steamcommunity.com/openid/login", {
+    const res = await fetch("https://steamcommunity.com/openid/login", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: verificationParams.toString(),
+      body: new URLSearchParams(verificationParams).toString(),
     });
 
-    const text = await response.text();
-    console.log("Steam verification response:", text);
+    const text = await res.text();
+    const isResponseValid = text.includes("is_valid:true");
 
-    const isValid = text.includes("is_valid:true");
-
-    if (!isValid) {
-      console.warn("Steam validation failed – is_valid:true not found.");
-      return NextResponse.redirect(new URL("/profile?error=steam_auth_failed", request.url));
+    if (!isResponseValid) {
+      return NextResponse.redirect(new URL("/login?error=Steam verification failed", request.url));
     }
 
-    // 2. Extract SteamID from claimed_id
-    // claimed_id format: https://steamcommunity.com/openid/id/<STEAMID>
+    // 2. Extract SteamID64 from openid.claimed_id or openid.identity
     const claimedId = params["openid.claimed_id"];
-    const steamId = claimedId.split("/").pop();
+    const steamId = claimedId?.split("/").pop();
 
-    if (!steamId || !/^\d{17}$/.test(steamId)) {
-        return NextResponse.redirect(new URL("/profile?error=invalid_steam_id", request.url));
+    if (!steamId) {
+      return NextResponse.redirect(new URL("/login?error=Could not extract SteamID", request.url));
     }
 
-    // 3. Redirect back to profile with the SteamID
-    // The frontend ProfilePage will detect this and link it to the current user
-    return NextResponse.redirect(new URL(`/profile?linked_steam_id=${steamId}`, request.url));
+    // 3. Redirect back to frontend with the SteamID
+    // Note: In a real app, you'd generate a custom token here using firebase-admin.
+    // For now, we'll pass it to a special handle page or the login page.
+    return NextResponse.redirect(new URL(`/login?steamId=${steamId}`, request.url));
   } catch (error) {
-    console.error("Steam OpenID Error:", error);
-    return NextResponse.redirect(new URL("/profile?error=internal_error", request.url));
+    console.error("Steam Auth Callback Error:", error);
+    return NextResponse.redirect(new URL("/login?error=Internal Server Error during Steam callback", request.url));
   }
 }
