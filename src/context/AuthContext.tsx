@@ -7,9 +7,11 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut,
-  signInWithCustomToken 
+  signInWithCustomToken,
+  updateProfile 
 } from "firebase/auth";
-import { auth, db } from "../lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { auth, db, storage } from "../lib/firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 interface AuthContextType {
@@ -20,6 +22,7 @@ interface AuthContextType {
   register: (email: string, password: string, name: string) => Promise<void>;
   loginWithSteam: (steamId: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateAvatar: (file: File) => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -84,8 +87,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithCustomToken(auth, data.token);
   };
 
+  const updateAvatar = async (file: File) => {
+    if (!user) throw new Error("Debes estar autenticado");
+
+    // 1. Upload to Storage
+    const storageRef = ref(storage, `avatars/${user.uid}`);
+    await uploadBytes(storageRef, file);
+    const photoURL = await getDownloadURL(storageRef);
+
+    // 2. Update Auth Profile
+    await updateProfile(user, { photoURL });
+
+    // 3. Update Firestore User Doc
+    await setDoc(doc(db, "users", user.uid), { photoURL }, { merge: true });
+
+    // 4. Update local state
+    setUserData((prev: any) => ({ ...prev, photoURL }));
+    
+    return photoURL;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, userData, loading, login, register, loginWithSteam, logout }}>
+    <AuthContext.Provider value={{ user, userData, loading, login, register, loginWithSteam, logout, updateAvatar }}>
       {children}
     </AuthContext.Provider>
   );

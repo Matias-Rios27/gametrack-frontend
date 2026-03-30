@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext"
 import { getUserGame, UsuarioJuego } from "@/lib/services/games"
 import { getGameDiary, DiarioEntry, deleteDiaryEntry } from "@/lib/services/diary"
 import EditDiaryModal from "@/components/diary/EditDiaryModal"
+import { GameChat } from "@/components/games/GameChat"
 
 export default function GameDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = use(params);
@@ -253,6 +254,12 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
             >
               Evaluación final
             </button>
+            <button 
+              onClick={() => setActiveTab('community')}
+              className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'community' ? 'border-electric-blue text-electric-blue' : 'border-transparent text-muted hover:text-foreground'}`}
+            >
+              Comunidad
+            </button>
           </div>
 
           <div className="py-2">
@@ -303,13 +310,12 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
                 )}
               </div>
             )}
-            {activeTab === 'review' && (
-              <div className="p-6 rounded-xl border border-dashed border-border-color text-center">
-                 <Trophy className="h-10 w-10 text-muted mx-auto mb-3" />
-                 <h4 className="text-foreground font-medium mb-1">Aún no has terminado este juego</h4>
-                 <p className="text-sm text-muted">Termínalo para poder evaluarlo en sus diferentes apartados.</p>
-              </div>
-            )}
+             {activeTab === 'community' && (
+               <div className="space-y-4">
+                  <p className="text-muted text-xs px-2">Conversa con otros jugadores sobre este título en tiempo real.</p>
+                  <GameChat gameId={game.id_juego} title={`Chat de ${titulo}`} />
+               </div>
+             )}
           </div>
 
         </div>

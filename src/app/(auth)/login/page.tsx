@@ -5,13 +5,14 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Gamepad2 } from "lucide-react";
+import { Gamepad2, Eye, EyeOff } from "lucide-react";
 import { AuthBackground } from "@/components/auth/AuthBackground";
 import { motion } from "framer-motion";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const { login, register, loginWithSteam } = useAuth(); // We might need register too
   const router = useRouter();
@@ -89,16 +90,25 @@ export default function LoginPage() {
                 placeholder="tu@email.com"
               />
             </div>
-            <div>
+            <div className="relative">
               <label className="text-sm font-medium text-foreground">Contraseña</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1.5 block w-full rounded-lg border border-border-color bg-background/50 px-4 py-2.5 text-foreground placeholder-muted focus:border-electric-blue focus:outline-none focus:ring-2 focus:ring-electric-blue/50 transition-all sm:text-sm"
-                placeholder="••••••••"
-              />
+              <div className="relative mt-1.5">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full rounded-lg border border-border-color bg-background/50 px-4 py-2.5 pr-12 text-foreground placeholder-muted focus:border-electric-blue focus:outline-none focus:ring-2 focus:ring-electric-blue/50 transition-all sm:text-sm"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted hover:text-electric-blue transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
             </div>
           </div>
 

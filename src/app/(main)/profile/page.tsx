@@ -9,6 +9,7 @@ import { getAllUserDiaryEntries } from '@/lib/services/diary';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { SteamLinkSection } from '@/components/profile/SteamLinkSection';
+import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
@@ -101,8 +102,8 @@ export default function ProfilePage() {
         <div className="glass-panel p-8 rounded-2xl flex flex-col md:flex-row items-center gap-8 relative overflow-hidden bg-card-bg border border-border-color">
           <div className="absolute top-0 right-0 w-64 h-64 bg-electric-blue/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
           
-          <div className="w-32 h-32 rounded-full bg-card-bg border-2 border-electric-blue flex items-center justify-center shadow-[0_0_15px_rgba(var(--color-electric-blue),0.3)] z-10 shrink-0">
-            <User className="w-16 h-16 text-electric-blue" />
+          <div className="z-10 shrink-0">
+            <AvatarUpload currentPhotoURL={userData?.photoURL || user?.photoURL} size="lg" />
           </div>
           
           <div className="flex-1 text-center md:text-left z-10">
