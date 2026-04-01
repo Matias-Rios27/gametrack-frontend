@@ -22,6 +22,8 @@ export default function Home() {
   const [steamLibrary, setSteamLibrary] = useState<any[]>([]);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [currency, setCurrency] = useState<'USD' | 'CLP'>('USD');
+  const EXCHANGE_RATE_CLP = 980;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -156,14 +158,28 @@ export default function Home() {
         <Card className="bg-gradient-to-br from-amber-500/10 to-transparent border-amber-500/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-amber-600 dark:text-amber-400">Total Gastado (Steam)</CardTitle>
-            <div className="p-1 px-2 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">ESTIMADO</div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 text-[10px] px-2 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 rounded"
+                onClick={() => setCurrency(c => c === 'USD' ? 'CLP' : 'USD')}
+              >
+                a {currency === 'USD' ? 'CLP' : 'USD'}
+              </Button>
+              <div className="p-1 px-2 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">ESTIMADO</div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground">
-              ${userData?.spent_steam || (steamLibrary.length * 15).toLocaleString()}
+              {currency === 'USD' ? '$' : 'CLP$'} {
+                currency === 'USD' 
+                  ? (userData?.spent_steam || (steamLibrary.length * 15)).toLocaleString()
+                  : ((userData?.spent_steam || (steamLibrary.length * 15)) * EXCHANGE_RATE_CLP).toLocaleString('es-CL')
+              }
             </div>
             <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1">
-              Basado en {steamLibrary.length} juegos
+              Basado en {steamLibrary.length} juegos {currency === 'CLP' && '(~$980)'}
             </p>
           </CardContent>
         </Card>

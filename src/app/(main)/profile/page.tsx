@@ -103,7 +103,7 @@ export default function ProfilePage() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-electric-blue/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
           
           <div className="z-10 shrink-0">
-            <AvatarUpload currentPhotoURL={userData?.photoURL || user?.photoURL} size="lg" />
+            <AvatarUpload currentPhotoURL={userData?.steamAvatar || userData?.photoURL || user?.photoURL} size="lg" />
           </div>
           
           <div className="flex-1 text-center md:text-left z-10">

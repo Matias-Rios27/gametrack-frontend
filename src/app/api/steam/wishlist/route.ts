@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     // Steam doesn't have a direct "GetWishlist" Web API in the IPlayerService that is public/easy for all apps
     // However, the big-picture store API often works: store.steampowered.com/wishlist/profiles/<STEAMID>/wishlistdata/
     const response = await fetch(
-      `https://store.steampowered.com/wishlist/profiles/${steamid}/wishlistdata/`
+      `https://store.steampowered.com/wishlist/profiles/${steamid}/wishlistdata/?cc=us`
     );
 
     if (!response.ok) {

@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext"
 import { useRouter } from "next/navigation"
 
 export function Navbar() {
-  const { logout } = useAuth()
+  const { logout, userData, user } = useAuth()
   const router = useRouter()
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border-color bg-card-bg backdrop-blur-xl">
@@ -20,8 +20,16 @@ export function Navbar() {
         </Link>
         <div className="ml-auto flex items-center gap-4">
           <Link href="/profile">
-            <Button variant="ghost" size="icon" className="rounded-full hover:bg-electric-blue/20 hover:text-electric-blue group transition-all">
-              <User className="h-5 w-5 text-muted group-hover:text-electric-blue" />
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-electric-blue/20 hover:text-electric-blue group transition-all overflow-hidden">
+              {userData?.steamAvatar || userData?.photoURL || user?.photoURL ? (
+                <img 
+                  src={userData?.steamAvatar || userData?.photoURL || user?.photoURL} 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover rounded-full" 
+                />
+              ) : (
+                <User className="h-5 w-5 text-muted group-hover:text-electric-blue" />
+              )}
             </Button>
           </Link>
           <Button 

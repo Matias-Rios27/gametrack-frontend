@@ -14,6 +14,8 @@ export default function WishlistPage() {
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [steamWishlist, setSteamWishlist] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [currency, setCurrency] = useState<'USD' | 'CLP'>('USD');
+  const EXCHANGE_RATE_CLP = 980;
 
   useEffect(() => {
     if (user) {
@@ -117,10 +119,20 @@ export default function WishlistPage() {
 
       {steamWishlist.length > 0 && (
         <div className="mt-12">
-          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3 mb-6">
-            <img src="/steam-icon.svg" alt="Steam" className="w-6 h-6" onError={(e) => (e.target as any).style.display='none'} />
-            Steam Wishlist
-          </h2>
+          <div className="flex flex-row items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3">
+              <img src="/steam-icon.svg" alt="Steam" className="w-6 h-6" onError={(e) => (e.target as any).style.display='none'} />
+              Steam Wishlist
+            </h2>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 text-xs border-electric-blue/30 text-electric-blue hover:bg-electric-blue/10 rounded"
+              onClick={() => setCurrency(c => c === 'USD' ? 'CLP' : 'USD')}
+            >
+              Ver en {currency === 'USD' ? 'CLP' : 'USD'}
+            </Button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {steamWishlist.map((item) => (
               <Card key={item.id} className="bg-card-bg border-border-color hover:border-electric-blue overflow-hidden group">
@@ -139,8 +151,19 @@ export default function WishlistPage() {
                         {item.release_string || "Próximamente"}
                     </div>
                     {item.subs && item.subs[0] && (
-                        <div className="text-sm font-semibold text-emerald-400">
-                            {item.subs[0].price ? `${(item.subs[0].price / 100).toFixed(2)} USD` : "Pronto"}
+                        <div className="text-sm font-semibold flex items-center gap-2">
+                            {item.subs[0].discount_pct > 0 && (
+                                <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                   -{item.subs[0].discount_pct}%
+                                </span>
+                            )}
+                            <span className={item.subs[0].discount_pct > 0 ? "text-emerald-400" : "text-foreground"}>
+                                {item.subs[0].price ? (
+                                  currency === 'USD' 
+                                    ? `${(item.subs[0].price / 100).toFixed(2)} USD`
+                                    : `CLP$ ${Math.round((item.subs[0].price / 100) * EXCHANGE_RATE_CLP).toLocaleString('es-CL')}`
+                                ) : "Pronto"}
+                            </span>
                         </div>
                     )}
                   </div>

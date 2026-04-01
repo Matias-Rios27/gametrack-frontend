@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useState, useEffect } from "react"
+import { use, useState, useEffect, useRef } from "react"
 import { ArrowLeft, Edit, Clock, Trophy, Target, BookText, Edit2, Trash2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card"
@@ -16,6 +16,7 @@ import EditDiaryModal from "@/components/diary/EditDiaryModal"
 export default function GameDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = use(params);
   const { user, userData } = useAuth();
+  const hasAutoSynced = useRef(false);
 
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -49,6 +50,13 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
     }
   }, [user, unwrappedParams.id]);
 
+  useEffect(() => {
+    if (game?.steam_appid && userData?.steamId && user && !hasAutoSynced.current) {
+      hasAutoSynced.current = true;
+      handleSyncSteam();
+    }
+  }, [game?.steam_appid, userData?.steamId, user]);
+
   const handleSyncSteam = async () => {
     if (!game?.steam_appid || !user || !userData?.steamId) return;
     setSyncing(true);
@@ -70,6 +78,12 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
       let newProgress = game.progreso || 0;
       if (achData.error === "PRIVACY_ERROR") {
         setSyncError("Tu perfil de Steam es privado. Cambia la privacidad de 'Detalles de los juegos' a Público.");
+      } else if (achData.error) {
+        if (achData.error.includes("private")) {
+          setSyncError("Los detalles de tus juegos en Steam son privados.");
+        } else {
+          setSyncError("Steam informa: Este juego no tiene logros o no hay información.");
+        }
       } else {
         setSyncError(null);
         if (achData.total > 0) {
