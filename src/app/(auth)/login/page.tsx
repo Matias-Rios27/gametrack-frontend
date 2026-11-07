@@ -1,148 +1,96 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/Button";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Gamepad2, Eye, EyeOff } from "lucide-react";
-import { AuthBackground } from "@/components/auth/AuthBackground";
-import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { PasswordField } from "@/components/auth/PasswordField";
+import { SteamButton } from "@/components/auth/SteamButton";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { useAuth } from "@/context/AuthContext";
+import { authErrorMessage } from "@/lib/authErrors";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const { login, register, loginWithSteam } = useAuth(); // We might need register too
-  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
   const [loadingSteam, setLoadingSteam] = useState(false);
+  const { login, loginWithSteam } = useAuth();
+  const router = useRouter();
 
-  // Handle Steam Login if steamId is in URL
+  // Retorno desde Steam: el steamId llega en la URL
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const steamId = urlParams.get("steamId");
-    if (steamId) {
-      handleSteamLogin(steamId);
-    }
-  }, []);
+    const steamId = new URLSearchParams(window.location.search).get("steamId");
+    if (!steamId) return;
 
-  const handleSteamLogin = async (steamId: string) => {
-    setLoadingSteam(true);
-    try {
-      await loginWithSteam(steamId);
-      router.push("/");
-    } catch (err: any) {
-      setError("Error al iniciar sesión con Steam: " + err.message + ". ¿Has configurado FIREBASE_SERVICE_ACCOUNT_KEY?");
-    } finally {
-      setLoadingSteam(false);
-    }
-  };
+    const run = async () => {
+      setLoadingSteam(true);
+      try {
+        await loginWithSteam(steamId);
+        router.push("/");
+      } catch {
+        setError("No se pudo iniciar sesión con Steam. Inténtalo de nuevo.");
+      } finally {
+        setLoadingSteam(false);
+      }
+    };
+    run();
+  }, [loginWithSteam, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setSubmitting(true);
     try {
       await login(email, password);
       router.push("/");
-    } catch (err: any) {
-      setError(err.message || "Error al iniciar sesión");
+    } catch (err) {
+      setError(authErrorMessage(err, "No se pudo iniciar sesión."));
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="relative flex h-screen w-full items-center justify-center p-4">
-      <AuthBackground />
-      
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-md space-y-8 rounded-2xl bg-card-bg/80 backdrop-blur-xl border border-border-color p-8 shadow-[0_0_40px_-10px_rgba(var(--color-electric-blue),0.3)]"
-      >
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-electric-blue to-blue-600 shadow-lg shadow-electric-blue/30">
-            <Gamepad2 className="h-7 w-7 text-white" />
-          </div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground mt-2">Iniciar Sesión</h2>
-          <p className="text-sm text-muted">Bienvenido de vuelta a GameTrack</p>
-        </div>
-
-        {error && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="rounded-lg bg-red-500/10 p-4 text-sm text-red-400 border border-red-500/20"
-          >
-            {error}
-          </motion.div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-foreground">Correo Electrónico</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1.5 block w-full rounded-lg border border-border-color bg-background/50 px-4 py-2.5 text-foreground placeholder-muted focus:border-electric-blue focus:outline-none focus:ring-2 focus:ring-electric-blue/50 transition-all sm:text-sm"
-                placeholder="tu@email.com"
-              />
-            </div>
-            <div className="relative">
-              <label className="text-sm font-medium text-foreground">Contraseña</label>
-              <div className="relative mt-1.5">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full rounded-lg border border-border-color bg-background/50 px-4 py-2.5 pr-12 text-foreground placeholder-muted focus:border-electric-blue focus:outline-none focus:ring-2 focus:ring-electric-blue/50 transition-all sm:text-sm"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted hover:text-electric-blue transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <Button type="submit" className="w-full bg-gradient-to-r from-electric-blue to-blue-600 hover:opacity-90 text-white border-0 py-6 font-semibold text-md shadow-lg shadow-electric-blue/25 transition-all hover:scale-[1.02] active:scale-[0.98]">
-            Entrar al juego
-          </Button>
-        </form>
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border-color"></div>
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card-bg px-2 text-muted">O continuar con</span>
-          </div>
-        </div>
-
-        <Button 
-          variant="outline" 
-          onClick={() => window.location.href = "/api/auth/steam"}
-          disabled={loadingSteam}
-          className="w-full border-border-color hover:border-electric-blue hover:bg-electric-blue/5 transition-all flex items-center justify-center gap-3 py-6"
-        >
-          <img src="/steam-icon.svg" alt="Steam" className="w-5 h-5" onError={(e) => (e.target as any).style.display='none'} />
-          {loadingSteam ? "Verificando..." : "Iniciar sesión con Steam"}
-        </Button>
-
-        <p className="text-center text-sm text-muted">
-          ¿Nuevo jugador?{" "}
-          <Link href="/register" className="font-semibold text-electric-blue hover:text-blue-400 transition-colors">
-            Crear cuenta
-          </Link>
+    <AuthShell title="Iniciar sesión" subtitle="Vuelve a tu backlog y sigue donde lo dejaste.">
+      {error && (
+        <p role="alert" className="mb-6 rounded-md border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
+          {error}
         </p>
-      </motion.div>
-    </div>
+      )}
+
+      <form onSubmit={handleLogin} className="space-y-5">
+        <div>
+          <label htmlFor="email" className="text-sm font-medium">
+            Correo electrónico
+          </label>
+          <Input
+            id="email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="tu@correo.com"
+            className="mt-1.5"
+          />
+        </div>
+        <PasswordField id="password" value={password} onChange={setPassword} autoComplete="current-password" />
+        <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+          {submitting ? "Entrando" : "Entrar"}
+        </Button>
+      </form>
+
+      <SteamButton label="Entrar con Steam" loading={loadingSteam} />
+
+      <p className="mt-6 text-center text-sm text-muted">
+        ¿Aún no tienes cuenta?{" "}
+        <Link href="/register" className="font-semibold text-primary-text underline-offset-4 hover:underline">
+          Crear cuenta
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

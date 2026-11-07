@@ -112,6 +112,15 @@ export const updateUserGameStatus = async (userGameId: string, status: Estado, p
   await updateDoc(docRef, updateData);
 };
 
+// Guarda las horas y el progreso sincronizados desde Steam
+export const updateUserGameStats = async (
+  userGameId: string,
+  stats: { horas_jugadas: number; progreso?: number }
+) => {
+  const docRef = doc(db, USUARIO_JUEGOS_COLLECTION, userGameId);
+  await updateDoc(docRef, { ...stats, updatedAt: new Date().toISOString() });
+};
+
 export const updateGameAndUserGame = async (
   userGameId: string, 
   gameId: string, 

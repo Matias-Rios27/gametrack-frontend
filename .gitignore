@@ -40,3 +40,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# skills instaladas localmente (el origen queda en skills-lock.json)
+/.agents/
+
+# referencias de diseño con arte de terceros (solo uso local)
+/design/
+
+# configuracion del editor
+/.vscode/
+
+# salidas de herramientas de prueba y diseño
+/.playwright-mcp/
+/.taste-skill/
+
+# permisos locales de Claude Code
+/.claude/settings.local.json

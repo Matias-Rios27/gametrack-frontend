@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
 import Link from "next/link"
 import { useAuth } from "@/context/AuthContext"
-import { getUserWishlist, WishlistItem } from "@/lib/services/wishlist"
+import { getUserWishlist, removeFromWishlist, WishlistItem } from "@/lib/services/wishlist"
 
 export default function WishlistPage() {
   const { user, userData, loading } = useAuth();
@@ -15,7 +15,28 @@ export default function WishlistPage() {
   const [steamWishlist, setSteamWishlist] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [currency, setCurrency] = useState<'USD' | 'CLP'>('USD');
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [removeError, setRemoveError] = useState("");
   const EXCHANGE_RATE_CLP = 980;
+
+  // Borra el juego de la wishlist tras confirmar y lo quita de la lista local
+  const handleRemove = async (item: WishlistItem) => {
+    if (!item.id) return;
+    const title = item.juego?.titulo || "este juego";
+    if (!window.confirm(`¿Quitar ${title} de tu wishlist?`)) return;
+
+    setRemoveError("");
+    setRemovingId(item.id);
+    try {
+      await removeFromWishlist(item.id);
+      setItems((prev) => prev.filter((i) => i.id !== item.id));
+    } catch (err) {
+      console.error("Error al quitar de la wishlist", err);
+      setRemoveError(`No se pudo quitar ${title} de tu wishlist. Inténtalo de nuevo.`);
+    } finally {
+      setRemovingId(null);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -75,6 +96,11 @@ export default function WishlistPage() {
           </Button>
         </Link>
       </div>
+      {removeError && (
+        <p role="alert" className="rounded-md border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
+          {removeError}
+        </p>
+      )}
       <div className="flex flex-col gap-4">
         {items.length === 0 ? (
           <div className="text-center py-16 bg-card-bg rounded-xl border border-dashed border-border-color w-full mt-4">
@@ -107,8 +133,15 @@ export default function WishlistPage() {
                     <Heart className="h-4 w-4 fill-current text-electric-blue border-none" />
                     Comprado
                   </Button>
-                  <Button variant="ghost" size="icon" className="text-muted hover:text-red-400 hover:bg-red-500/10 shrink-0">
-                    <Trash2 className="h-4 w-4" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemove(item)}
+                    disabled={removingId === item.id}
+                    aria-label={`Quitar ${item.juego?.titulo || "juego"} de la wishlist`}
+                    className="text-muted hover:text-red-400 hover:bg-red-500/10 shrink-0"
+                  >
+                    <Trash2 aria-hidden="true" className="h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>

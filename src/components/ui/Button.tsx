@@ -1,35 +1,57 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "success" | "default" | "outline"
+type Size = "sm" | "default" | "lg" | "icon"
+
+const variantClasses: Record<Variant, string> = {
+  // Accion principal
+  primary: "bg-primary text-primary-ink hover:brightness-110",
+  // Accion de apoyo: borde del color primario, como el boton Wishlist del diseño
+  secondary: "border border-primary/60 text-ink hover:border-primary hover:bg-primary/10",
+  ghost: "text-muted hover:text-ink hover:bg-surface-2",
+  danger: "border border-danger/40 text-danger hover:bg-danger/10",
+  success: "border border-success/40 text-success hover:bg-success/10",
+  // Alias legacy para las vistas aun no rediseñadas
+  default: "bg-primary text-primary-ink hover:brightness-110",
+  outline: "border border-border text-ink hover:border-primary/60 hover:bg-surface-2",
+}
+
+const sizeClasses: Record<Size, string> = {
+  sm: "h-9 px-3 text-xs",
+  default: "h-11 px-5 text-[13px]",
+  lg: "h-12 px-7 text-sm",
+  icon: "h-11 w-11",
+}
+
+interface VariantOptions {
+  variant?: Variant
+  size?: Size
+  className?: string
+}
+
+// Clases de boton reutilizables tambien en <Link>
+export function buttonVariants({ variant = "primary", size = "default", className }: VariantOptions = {}) {
+  return cn(
+    "inline-flex select-none items-center justify-center gap-2 rounded-md font-semibold uppercase tracking-[0.06em]",
+    "transition-[transform,background-color,border-color,color,filter] duration-150",
+    "hover:-translate-y-px active:translate-y-0 active:scale-[0.98]",
+    "disabled:pointer-events-none disabled:opacity-50",
+    variantClasses[variant],
+    sizeClasses[size],
+    className
+  )
+}
+
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "outline" | "ghost" | "danger" | "success";
-  size?: "default" | "sm" | "lg" | "icon";
+  variant?: Variant
+  size?: Size
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "default", ...props }, ref) => {
-    return (
-      <button
-        ref={ref}
-        className={cn(
-          "inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50",
-          {
-            "bg-electric-blue text-black hover:bg-electric-blue/90 shadow-md shadow-electric-blue/20": variant === "default",
-            "border border-border-color bg-transparent hover:bg-card-bg text-foreground": variant === "outline",
-            "hover:bg-card-bg text-muted hover:text-foreground": variant === "ghost",
-            "bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20": variant === "danger",
-            "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/20": variant === "success",
-            "h-10 px-4 py-2": size === "default",
-            "h-8 rounded-md px-3 text-xs": size === "sm",
-            "h-12 rounded-lg px-8 text-base": size === "lg",
-            "h-10 w-10": size === "icon",
-          },
-          className
-        )}
-        {...props}
-      />
-    )
-  }
+  ({ className, variant, size, type = "button", ...props }, ref) => (
+    <button ref={ref} type={type} className={buttonVariants({ variant, size, className })} {...props} />
+  )
 )
 Button.displayName = "Button"
 

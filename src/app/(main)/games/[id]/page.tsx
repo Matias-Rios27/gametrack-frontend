@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/Badge"
 import Link from "next/link"
 import EditGameModal from "@/components/games/EditGameModal"
+import { GameHoloCover } from "@/components/games/GameHoloCover"
 import AddToWishlistButton from "@/components/wishlist/AddToWishlistButton"
 import { useAuth } from "@/context/AuthContext"
-import { getUserGame, UsuarioJuego } from "@/lib/services/games"
+import { getUserGame, updateUserGameStats, UsuarioJuego } from "@/lib/services/games"
 import { getGameDiary, DiarioEntry, deleteDiaryEntry } from "@/lib/services/diary"
 import EditDiaryModal from "@/components/diary/EditDiaryModal"
 
@@ -91,24 +92,19 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
         }
       }
 
-      const { updateDoc, doc } = await import("firebase/firestore");
-      const { db } = await import("@/lib/firebase");
-      
-      const updateData: any = {
-        horas_jugadas: newHours,
-        updatedAt: new Date().toISOString()
-      };
-      
-      if (!achData.error && achData.total > 0) {
-        updateData.progreso = newProgress;
-      }
+      // El progreso solo se actualiza si Steam entrego logros
+      const hasAchievements = !achData.error && achData.total > 0;
+      const stats = hasAchievements
+        ? { horas_jugadas: newHours, progreso: newProgress }
+        : { horas_jugadas: newHours };
 
-      await updateDoc(doc(db, "usuario_juego", game.id!), updateData);
-      
-      setGame({ 
-        ...game, 
-        horas_jugadas: newHours, 
-        progreso: updateData.progreso || game.progreso 
+      // Escritura a traves del servicio (imports estaticos, misma instancia autenticada de Firebase)
+      await updateUserGameStats(game.id!, stats);
+
+      setGame({
+        ...game,
+        horas_jugadas: newHours,
+        progreso: hasAchievements ? newProgress : game.progreso
       });
 
     } catch (error: any) {
@@ -189,16 +185,12 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Sidebar/Cover Info */}
         <div className="md:col-span-1 space-y-6">
-          <div className="aspect-[3/4] w-full bg-card-bg rounded-xl relative overflow-hidden ring-1 ring-border-color">
-            <div className="absolute inset-0 bg-gradient-to-tr from-electric-blue/20 to-transparent mix-blend-overlay z-10"></div>
-            {portada ? (
-              <img src={portada} alt="Portada" className="absolute inset-0 w-full h-full object-cover" />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center p-6 text-center z-20">
-                <span className="font-bold text-2xl text-foreground opacity-50">{titulo}</span>
-              </div>
-            )}
-          </div>
+          <GameHoloCover
+            title={titulo}
+            estado={game.estado}
+            portadaUrl={portada}
+            steamAppid={game.steam_appid ?? game.juego?.steam_appid}
+          />
 
           <Card>
             <CardContent className="p-6 space-y-4">

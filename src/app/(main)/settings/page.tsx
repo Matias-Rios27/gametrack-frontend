@@ -5,18 +5,12 @@ import { Globe, Palette, ArrowLeft, Check } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card"
 import Link from "next/link"
-import { useSettings } from "@/context/SettingsContext"
+import { ACCENT_COLORS, useSettings } from "@/context/SettingsContext"
 
 export default function SettingsPage() {
-  const { theme, setTheme, accentColor, setAccentColor, language, setLanguage } = useSettings()
+  const { theme, setTheme, accentColor, setAccentColor, language, setLanguage, backgroundMotion, setBackgroundMotion } = useSettings()
 
-  const accentColors = [
-    { name: "Cyan", value: "#00f0ff" },
-    { name: "Violeta", value: "#7c3aed" },
-    { name: "Esmeralda", value: "#10b981" },
-    { name: "Rosa", value: "#f43f5e" },
-    { name: "Ámbar", value: "#f59e0b" },
-  ] as const
+  const accentColors = ACCENT_COLORS
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -54,6 +48,28 @@ export default function SettingsPage() {
                   className={`h-6 w-11 rounded-full relative transition-colors duration-200 focus:outline-none ring-2 ring-electric-blue/10 ${theme === 'dark' ? 'bg-electric-blue' : 'bg-card-bg border border-border-color text-foreground'}`}
                 >
                    <div className={`absolute top-1 w-4 h-4 rounded-full transition-all duration-200 ${theme === 'dark' ? 'right-1 bg-black' : 'left-1 bg-electric-blue'}`}></div>
+                </button>
+              </div>
+
+              {/* Pausa del muro de juegos animado (WCAG 2.2.2) */}
+              <div className="flex items-center justify-between gap-4 p-4 bg-card-bg rounded-xl border border-border-color">
+                <div className="space-y-0.5">
+                  <p id="bg-motion-label" className="text-sm font-medium">Animar fondo</p>
+                  <p id="bg-motion-hint" className="text-xs text-muted">Mueve el muro de portadas detrás del contenido.</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={backgroundMotion}
+                  aria-labelledby="bg-motion-label"
+                  aria-describedby="bg-motion-hint"
+                  onClick={() => setBackgroundMotion(!backgroundMotion)}
+                  className={`relative h-6 w-11 shrink-0 rounded-full border transition-colors duration-200 ${backgroundMotion ? "border-primary bg-primary" : "border-border bg-surface-2"}`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full transition-[left] duration-200 ${backgroundMotion ? "left-[calc(100%-1.25rem)] bg-primary-ink" : "left-1 bg-muted"}`}
+                  />
                 </button>
               </div>
 
